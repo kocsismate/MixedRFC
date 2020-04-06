@@ -17,22 +17,19 @@ This will allow people to add types to parameters, class properties and function
 
 Mixed is used widely in the PHP manual.
 
-```
+```php
 var_dump ( mixed $expression [, mixed $... ] ) : void
 ```
 
 as it is shorter to write that, then it is to write the equivalent using union types:
 
-```
+```php
 var_dump ( array|bool|callable|int|float|null|object|resource|string $expression [, array|bool|callable|int|float|null|object|resource|string $... ] ) : void
-
 ```
-
 
 ## Review of LSP, Covariance and Contravariance!
 
 To hopefully avoid confusion about choice made in this RFC, a quick review of [Liskov Substituion Priniciple](https://en.wikipedia.org/wiki/Liskov_substitution_principle), Covariance and contravariance.
-
 
 ### Liskov Substituion Priniciple
 
@@ -40,15 +37,15 @@ Liskov's notion of a behavioural subtype defines a notion of substitutability fo
 
 PHP follows LSP when performing signature checks for inheritance.
 
-
 ### Contravariance aka type widening aka 
 
 PHP allows contravariance for parameter types to obey the LSP principle. A subclass may use a 'wider' aka less specific type in place of the inherited type for a parameter.
 
-```
+```php
 // Valid example
 
 class Animal {}
+
 class Cat extends Animal {}
 
 class A
@@ -63,8 +60,7 @@ class B extends A
 
 if (rand(0, 1) {
     $object = new A();
-}
-else {
+} else {
     $object = new B();
 }
 
@@ -76,7 +72,7 @@ This code works regardless of whether class A or B was created.
 
 A subclass may not use a 'narrower' aka more specific type in place of the inherited type for a parameter.
 
-```
+```php
 // Invalid example
 
 class Animal {}
@@ -98,8 +94,7 @@ class B extends A
 
 if (rand(0, 1) {
     $object = new A();
-}
-else {
+} else {
     $object = new B();
 }
 
@@ -115,7 +110,7 @@ PHP allows covariance for return types to obey the LSP principle.
 
 A subclass may use a narrower aka more specific type as a return type.
 
-```
+```php
 // Valid example
 
 class Animal
@@ -133,14 +128,14 @@ class A
     public function foo(): Animal {}
 }
 
-class B extends A {
+class B extends A
+{
    public function foo(): Cat {}
 }
 
 if (rand(0, 1) {
     $object = new A();
-}
-else {
+} else {
     $object = new B();
 }
 
@@ -152,7 +147,7 @@ This code works regardless of whether class A or B was created.
 
 A subclass may not use a wider aka less specific type as a return type.
 
-```
+```php
 // Invalid example
 
 class Animal
@@ -177,8 +172,7 @@ class B extends A
 
 if (rand(0, 1) {
     $object = new A();
-}
-else {
+} else {
     $object = new B();
 }
 
@@ -197,8 +191,9 @@ This RFC proposes that `mixed` would be equivalent to `array|bool|callable|int|f
 
 A parameter type may be widened in a subclass from a specific value type to the mixed type as this is contravariant and so is allowed in LSP.
 
-```
+```php
 // Valid example
+
 class A
 {
     public function foo(int $value) {}
@@ -211,10 +206,11 @@ class B extends A
 }
 ```
 
-
 A parameter type may not be narrowed in a subclass to a more specific type as this is not contravariant and so violates LSP.
-```
+
+```php
 // Invalid example
+
 class A
 {
     public function foo(mixed $value) {}
@@ -232,8 +228,9 @@ class B extends A
 
 Specific return type could be narrowed in a subclass by using the mixed type as this is covariant and is allowed in LSP
 
-```
+```php
 // Valid example
+
 class A
 {
     public function bar(): mixed {}
@@ -247,8 +244,9 @@ class B extends A
 ```
 
 Specific return type may not be widened as this is not covariant and so breaks LSP.
-```
+```php
 // Invalid example
+
 class C
 {
     public function bar(): int {}
@@ -266,7 +264,7 @@ class D extends C
 
 Currently, the signature checking done in PHP for functions that return void does not allow covariance even though this appears to be conformant to LSP. 
 
-```
+```php
 class A
 {
     public function bar(): void {}
@@ -286,7 +284,7 @@ The position of this RFC is to follow that existing behaviour. i.e. you can't wi
 
 When no native type is present for a function parameter, the signature checks for inheritance are done as if the parameter had a 'mixed' type.
 
-```
+```php
 class A
 {
     // no type is specified, mixed type is assumed
@@ -324,7 +322,7 @@ Since return types may be either mixed or void, the behaviour is slightly more c
 
 When no native type is present for a function return, the signature checks for inheritance are done as if the parameter had a 'mixed|void' type.
 
-```
+```php
 class A
 {
     // no return type is specified, mixed|void is assumed
@@ -366,7 +364,7 @@ The position of this RFC is to not support nullability of mixed type. This could
 
 This behaviour also conforms to the current usage in documentation.
 
-```
+```php
 //INVALID - Fatal error: Mixed types cannot be nullable, null is already part of the mixed type.
 function foo(?mixed $arg) {} 
  
